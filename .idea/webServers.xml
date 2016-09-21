@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="f3ee346e-90f3-43b6-ad8c-8497ee3da555" name="kimi.co.nf" url="http://kimi.co.nf">
+        <fileTransfer host="kimi.co.nf" port="21" username="2206941">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>
