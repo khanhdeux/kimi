@@ -1,3 +1,2 @@
-*.bak
-*.idea
-*.project
+.idea/*
+wp-config.php
