@@ -74,7 +74,7 @@
        <div class="copyright-wrapper">
         	<div class="container">
                 <div class="copyright-txt"><?php esc_attr_e('&copy; 2016','skt-cutsnstyle-lite');?> <?php bloginfo('name'); ?>. <?php esc_attr_e('All Rights Reserved', 'skt-cutsnstyle-lite');?></div>
-                <div class="designby"><?php printf('<a href="'.esc_url(SKT_FREE_THEME_URL).'" rel="nofollow" target="_blank">Cutsnstyle Lite Theme</a>' ); ?></div>
+                <div class="designby"></div>
                 <div class="clear"></div>
             </div>
         </div>

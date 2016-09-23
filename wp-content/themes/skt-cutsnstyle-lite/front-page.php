@@ -57,10 +57,15 @@ get_header(); ?>
 					<div class="listpages <?php if($p % 3 == 0) { echo "last_column"; } ?>">                       
                         <a href="#">
                         <div class="services-thumb"><img src="<?php echo get_template_directory_uri(); ?>/images/about<?php echo $p; ?>.jpg" alt="" /></div> 
-                        <div class="services-content">                     
-						  <h2><?php _e('Page Title','skt-cutsnstyle-lite'); ?> <?php echo $p; ?></h2>
-						  <p><?php _e('Lorem ipsum dolor simpleit amet, consectetur adipiscing dummy elit.','skt-cutsnstyle-lite'); ?></p>
-                         </div>
+                        <div class="services-content">
+                          <?php if($p == 1) { ?>
+                            <h2><?php echo __('TYPE ADVICE & CUT','skt-cutsnstyle-lite'); ?></h2>
+                          <?php } else if ($p == 2) { ?>
+                            <h2><?php echo __('HAIR EXTENSION','skt-cutsnstyle-lite'); ?></h2>
+                          <?php } else if ($p == 3) { ?>
+                            <h2><?php echo __('COLORATION','skt-cutsnstyle-lite'); ?></h2>
+                          <?php } ?>
+                        </div>
                        </a>
                      </div>
 			<?php }} ?>                     
@@ -69,36 +74,4 @@ get_header(); ?>
             </div><!-- container -->
  </section>
 <?php } ?>
-<div class="container">
-     <div class="page_content">
-        <section class="site-main">
-        	 <div class="blog-post">
-					<?php
-                    if ( have_posts() ) :
-                        // Start the Loop.
-                        while ( have_posts() ) : the_post();
-                            /*
-                             * Include the post format-specific template for the content. If you want to
-                             * use this in a child theme, then include a file called called content-___.php
-                             * (where ___ is the post format) and that will be used instead.
-                             */
-                            get_template_part( 'content', get_post_format() );
-                    
-                        endwhile;
-                        // Previous/next post navigation.
-                        skt_cutsnstyle_lite_pagination();
-                    
-                    else :
-                        // If no content, include the "No posts found" template.
-                         get_template_part( 'no-results', 'index' );
-                    
-                    endif;
-                    ?>
-                    </div><!-- blog-post -->
-             </section>
-      
-        <?php get_sidebar();?>     
-        <div class="clear"></div>
-    </div><!-- site-aligner -->
-</div><!-- content -->
 <?php get_footer(); ?>
