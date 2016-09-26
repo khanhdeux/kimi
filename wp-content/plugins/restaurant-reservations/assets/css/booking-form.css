@@ -3,6 +3,7 @@
 .rtb-booking-form fieldset {
 	padding-bottom: 1em;
 	margin-bottom: 1em;
+    padding-left: 2em;
 }
 .rtb-booking-form legend {
 	padding: 0 0.5em;
