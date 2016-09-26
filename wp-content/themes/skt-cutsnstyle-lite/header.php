@@ -40,7 +40,7 @@
                  </div>
                   <div class="appoint-colmn">                  
                     <?php if ( get_theme_mod('appointbutton_link', '#') ) { ?> 
-                    <a title="Book an Appointment" class="bookbutton" href="<?php echo esc_url(get_theme_mod('appointbutton_link','#')); ?>">Book an Appointment</a>
+                    <a title="Book an Appointment" class="bookbutton" href="<?php echo esc_url(get_theme_mod('appointbutton_link','#')); ?>"><?php _e('Book an Appointment','skt-cutsnstyle-lite'); ?></a>
                     <?php } ?>                               
                  </div> 
                  <?php endif; // end sidebar widget area ?>	                
