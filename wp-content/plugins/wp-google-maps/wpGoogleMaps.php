@@ -3,7 +3,7 @@
 Plugin Name: WP Google Maps
 Plugin URI: http://www.wpgmaps.com
 Description: The easiest to use Google Maps plugin! Create custom Google Maps with high quality markers containing locations, descriptions, images and links. Add your customized map to your WordPress posts and/or pages quickly and easily with the supplied shortcode. No fuss.
-Version: 6.3.19
+Version: 6.3.20
 Author: WP Google Maps
 Author URI: http://www.wpgmaps.com
 Text Domain: wp-google-maps
@@ -11,7 +11,11 @@ Domain Path: /languages
 */
 
 /* 
- * 6.3.19 - 2016-09-22
+ * 6.3.20 - 2016-09-27
+ * Fixed a big that prevented the map from loading in a widget
+ * Refactored code used to load the Google Maps API and Script files
+ * 
+ * 6.3.19 - 2016-09-21
  * Fixed a bug that caused some maps to not load markers on page load
  * 
  * 6.3.18 - 2016-09-15
@@ -1677,186 +1681,172 @@ function wpgmaps_admin_javascript_basic() {
 
 
 function wpgmaps_user_javascript_basic() {
+
+    /**
+     * @deprecated [6.3.10] [Moved into the wpgmza_tag_basic function]
+     * 
+     */
     global $short_code_active;
     global $wpgmza_current_map_id;
     global $wpgmza_version;
 
-    if ($short_code_active) {
+    $ajax_nonce = wp_create_nonce("wpgmza");
 
-        $ajax_nonce = wp_create_nonce("wpgmza");
-
-        $res = array();
-        $res[0] = wpgmza_get_map_data($wpgmza_current_map_id);
-        $wpgmza_settings = get_option("WPGMZA_OTHER_SETTINGS");
-        
-        if (isset($wpgmza_settings['wpgmza_api_version'])) { 
-            $api_version = $wpgmza_settings['wpgmza_api_version'];
-            if (isset($api_version) && $api_version != "") {
-                $api_version_string = "v=$api_version&";
-            } else {
-                $api_version_string = "v=3.exp&";
-            }
+    $res = array();
+    $res[0] = wpgmza_get_map_data($wpgmza_current_map_id);
+    $wpgmza_settings = get_option("WPGMZA_OTHER_SETTINGS");
+    
+    if (isset($wpgmza_settings['wpgmza_api_version'])) { 
+        $api_version = $wpgmza_settings['wpgmza_api_version'];
+        if (isset($api_version) && $api_version != "") {
+            $api_version_string = "v=$api_version&";
         } else {
             $api_version_string = "v=3.exp&";
         }
-        
-        $map_other_settings = maybe_unserialize($res[0]->other_settings);
-        $res[0]->other_settings = $map_other_settings;
-        $res[0]->map_width_type = stripslashes($res[0]->map_width_type);
-
-
-        if ($res[0]->other_settings['wpgmza_theme_data'] != '') {
-            $res[0]->other_settings['wpgmza_theme_data'] = html_entity_decode(stripslashes($res[0]->other_settings['wpgmza_theme_data']));
-        }
-        /*
-         * deprecated in 6.2.0
-         
-        if (isset($map_other_settings['weather_layer'])) { $weather_layer = $map_other_settings['weather_layer']; }  else { $weather_layer = false; }
-        if (isset($map_other_settings['weather_layer_temp_type'])) { $weather_layer_temp_type = $map_other_settings['weather_layer_temp_type']; } else { $weather_layer_temp_type = false; }
-        if (isset($map_other_settings['cloud_layer'])) { $cloud_layer = $map_other_settings['cloud_layer']; } else { $cloud_layer = false; }
-        */
-       
-
-       /*
-        if (isset($map_other_settings['transport_layer'])) { $transport_layer = $map_other_settings['transport_layer']; } else { $transport_layer = false; }
-        if (isset($map_other_settings['store_locator_bounce'])) { $store_locator_bounce = $map_other_settings['store_locator_bounce']; } else { $store_locator_bounce = 1; }
-        
-        $wpgmza_lat = $res->map_start_lat;
-        $wpgmza_lng = $res->map_start_lng;
-        $wpgmza_width = $res->map_width;
-        $wpgmza_height = $res->map_height;
-        $wpgmza_width_type = $res->map_width_type;
-        $wpgmza_height_type = $res->map_height_type;
-        $wpgmza_map_type = $res->type;
-        $wpgmza_traffic = $res->traffic;
-        $wpgmza_bicycle = $res->bicycle;
-
-        if (isset($map_other_settings['map_max_zoom'])) { $wpgmza_max_zoom = intval($map_other_settings['map_max_zoom']); } else { $wpgmza_max_zoom = 2; }
-        if (isset($map_other_settings['wpgmza_theme_data'])) { $wpgmza_theme_data = $map_other_settings['wpgmza_theme_data']; } else { $wpgmza_theme_data = false; }
-
-        
-        if (isset($wpgmza_settings['wpgmza_settings_map_open_marker_by'])) { $wpgmza_open_infowindow_by = $wpgmza_settings['wpgmza_settings_map_open_marker_by']; } else { $wpgmza_open_infowindow_by = '1'; }
-        if ($wpgmza_open_infowindow_by == null || !isset($wpgmza_open_infowindow_by)) { $wpgmza_open_infowindow_by = '1'; }
-
-        if (!$wpgmza_map_type || $wpgmza_map_type == "" || $wpgmza_map_type == "1") { $wpgmza_map_type = "ROADMAP"; }
-        else if ($wpgmza_map_type == "2") { $wpgmza_map_type = "SATELLITE"; }
-        else if ($wpgmza_map_type == "3") { $wpgmza_map_type = "HYBRID"; }
-        else if ($wpgmza_map_type == "4") { $wpgmza_map_type = "TERRAIN"; }
-        else { $wpgmza_map_type = "ROADMAP"; }
-        
-
-        $start_zoom = $res->map_start_zoom;
-        if ($start_zoom < 1 || !$start_zoom) { $start_zoom = 5; }
-        if (!$wpgmza_lat || !$wpgmza_lng) { $wpgmza_lat = "51.5081290"; $wpgmza_lng = "-0.1280050"; }
-        
-        
-        if (isset($wpgmza_settings['wpgmza_settings_marker_pull'])) { $marker_pull = $wpgmza_settings['wpgmza_settings_marker_pull']; } else { $marker_pull = "1"; }
-        $restrict_search = false;
-        if (isset($map_other_settings['wpgmza_store_locator_restrict'])) { $restrict_search = $map_other_settings['wpgmza_store_locator_restrict']; } else { $restrict_search = false; }
-        */
-       
-        $polygonoptions = array();
-        $total_poly_array = wpgmza_b_return_polygon_id_array($wpgmza_current_map_id);
-
-        if ($total_poly_array > 0) {
-            foreach ($total_poly_array as $poly_id) {
-                $polygonoptions[$poly_id] = wpgmza_b_return_poly_options($poly_id);
-
-                $tmp_poly_array = wpgmza_b_return_polygon_array($poly_id);
-                $poly_data_raw_array = array();
-                foreach ($tmp_poly_array as $single_poly) {
-                    $poly_data_raw = str_replace(" ","",$single_poly);
-                    $poly_data_raw = explode(",",$poly_data_raw);
-                    $lat = $poly_data_raw[0];
-                    $lng = $poly_data_raw[1];
-                    $poly_data_raw_array[] = $poly_data_raw;
-                }
-                $polygonoptions[$poly_id]->polydata = $poly_data_raw_array;
-
-                $linecolor = $polygonoptions[$poly_id]->linecolor;
-                $fillcolor = $polygonoptions[$poly_id]->fillcolor;
-                $fillopacity = $polygonoptions[$poly_id]->opacity;
-                if (!$linecolor) { $polygonoptions[$poly_id]->linecolor = "000000"; }
-                if (!$fillcolor) { $polygonoptions[$poly_id]->fillcolor = "66FF00"; }
-                if (!$fillopacity) { $polygonoptions[$poly_id]->opacity = "0.5"; }
-            }
-        }  else { $polygonoptions = array(); } 
-
-
-        $polylineoptions = array();
-
-        $total_poly_array = wpgmza_b_return_polyline_id_array($wpgmza_current_map_id);
-        if ($total_poly_array > 0) {
-            foreach ($total_poly_array as $poly_id) {
-                $polylineoptions[$poly_id] = wpgmza_b_return_polyline_options($poly_id);
-
-                $tmp_poly_array = wpgmza_b_return_polyline_array($poly_id);
-                $poly_data_raw_array = array();
-                foreach ($tmp_poly_array as $single_poly) {
-                    $poly_data_raw = str_replace(" ","",$single_poly);
-                    $poly_data_raw = str_replace(")","",$poly_data_raw );
-                    $poly_data_raw = str_replace("(","",$poly_data_raw );
-                    $poly_data_raw = explode(",",$poly_data_raw);
-                    $lat = $poly_data_raw[0];
-                    $lng = $poly_data_raw[1];
-                    $poly_data_raw_array[] = $poly_data_raw;
-                }
-                $polylineoptions[$poly_id]->polydata = $poly_data_raw_array;
-
-
-                if (isset($polylineoptions[$poly_id]->linecolor)) { $linecolor = $polylineoptions[$poly_id]->linecolor; } else { $linecolor = false; }
-                if (isset($polylineoptions[$poly_id]->fillcolor)) { $fillcolor = $polylineoptions[$poly_id]->fillcolor; } else { $fillcolor = false; }
-                if (isset($polylineoptions[$poly_id]->opacity)) { $fillopacity = $polylineoptions[$poly_id]->opacity; } else { $fillopacity = false; }
-                if (!$linecolor) { $polylineoptions[$poly_id]->linecolor = "000000"; }
-                if (!$fillcolor) { $polylineoptions[$poly_id]->fillcolor = "66FF00"; }
-                if (!$fillopacity) { $polylineoptions[$poly_id]->opacity = "0.5"; }
-            }
-        } else { $polylineoptions = array(); } 
-  
-        if (isset($wpgmza_settings['wpgmza_settings_marker_pull']) && $wpgmza_settings['wpgmza_settings_marker_pull'] == "0") {
-            $markers = wpgmaps_return_markers($wpgmza_current_map_id);
-        }
-        
-        $wpgmza_locale = get_locale();
-        $wpgmza_suffix = ".com";
-        /* Hebrew correction */
-        if ($wpgmza_locale == "he_IL") { $wpgmza_locale = "iw"; }
-
-        /* Chinese integration */
-        if ($wpgmza_locale == "zh_CN") { $wpgmza_suffix = ".cn"; } else { $wpgmza_suffix = ".com"; } 
-
-        wp_enqueue_script('wpgmaps_core', plugins_url('/js/wpgmaps.min.js',__FILE__), array( 'wpgmza_api_call' ), $wpgmza_version.'b' , false);
-
-        do_action("wpgooglemaps_basic_hook_user_js_after_core");
-
-
-
-
-        wp_localize_script( 'wpgmaps_core', 'wpgmaps_localize', $res);
-        wp_localize_script( 'wpgmaps_core', 'wpgmaps_localize_polygon_settings', $polygonoptions);
-        wp_localize_script( 'wpgmaps_core', 'wpgmaps_localize_polyline_settings', $polylineoptions);
-
-        wp_localize_script( 'wpgmaps_core', 'wpgmaps_markerurl', wpgmaps_get_marker_url($wpgmza_current_map_id));
-
-
-        if ($wpgmza_settings['wpgmza_settings_marker_pull'] == "0") {
-            wp_localize_script( 'wpgmaps_core', 'wpgmaps_localize_marker_data', $markers);
-        }
-        
-        $wpgmza_settings = apply_filters("wpgmza_basic_filter_localize_settings",$wpgmza_settings);
-
-        wp_localize_script( 'wpgmaps_core', 'wpgmaps_localize_global_settings', $wpgmza_settings);
-
-        wp_localize_script( 'wpgmaps_core', 'wpgmaps_lang_km_away', __("km away","wp-google-maps"));
-        wp_localize_script( 'wpgmaps_core', 'wpgmaps_lang_m_away', __("miles away","wp-google-maps"));
-
-            
-            
-        ?>       
-
-
-    <?php
+    } else {
+        $api_version_string = "v=3.exp&";
     }
+    
+    $map_other_settings = maybe_unserialize($res[0]->other_settings);
+    $res[0]->other_settings = $map_other_settings;
+    $res[0]->map_width_type = stripslashes($res[0]->map_width_type);
+
+
+    if ($res[0]->other_settings['wpgmza_theme_data'] != '') {
+        $res[0]->other_settings['wpgmza_theme_data'] = html_entity_decode(stripslashes($res[0]->other_settings['wpgmza_theme_data']));
+    }   
+    /*
+     * deprecated in 6.2.0
+     
+    if (isset($map_other_settings['weather_layer'])) { $weather_layer = $map_other_settings['weather_layer']; }  else { $weather_layer = false; }
+    if (isset($map_other_settings['weather_layer_temp_type'])) { $weather_layer_temp_type = $map_other_settings['weather_layer_temp_type']; } else { $weather_layer_temp_type = false; }
+    if (isset($map_other_settings['cloud_layer'])) { $cloud_layer = $map_other_settings['cloud_layer']; } else { $cloud_layer = false; }
+    */
+   
+
+   /*
+    if (isset($map_other_settings['transport_layer'])) { $transport_layer = $map_other_settings['transport_layer']; } else { $transport_layer = false; }
+    if (isset($map_other_settings['store_locator_bounce'])) { $store_locator_bounce = $map_other_settings['store_locator_bounce']; } else { $store_locator_bounce = 1; }
+    
+    $wpgmza_lat = $res->map_start_lat;
+    $wpgmza_lng = $res->map_start_lng;
+    $wpgmza_width = $res->map_width;
+    $wpgmza_height = $res->map_height;
+    $wpgmza_width_type = $res->map_width_type;
+    $wpgmza_height_type = $res->map_height_type;
+    $wpgmza_map_type = $res->type;
+    $wpgmza_traffic = $res->traffic;
+    $wpgmza_bicycle = $res->bicycle;
+
+    if (isset($map_other_settings['map_max_zoom'])) { $wpgmza_max_zoom = intval($map_other_settings['map_max_zoom']); } else { $wpgmza_max_zoom = 2; }
+    if (isset($map_other_settings['wpgmza_theme_data'])) { $wpgmza_theme_data = $map_other_settings['wpgmza_theme_data']; } else { $wpgmza_theme_data = false; }
+
+    
+    if (isset($wpgmza_settings['wpgmza_settings_map_open_marker_by'])) { $wpgmza_open_infowindow_by = $wpgmza_settings['wpgmza_settings_map_open_marker_by']; } else { $wpgmza_open_infowindow_by = '1'; }
+    if ($wpgmza_open_infowindow_by == null || !isset($wpgmza_open_infowindow_by)) { $wpgmza_open_infowindow_by = '1'; }
+
+    if (!$wpgmza_map_type || $wpgmza_map_type == "" || $wpgmza_map_type == "1") { $wpgmza_map_type = "ROADMAP"; }
+    else if ($wpgmza_map_type == "2") { $wpgmza_map_type = "SATELLITE"; }
+    else if ($wpgmza_map_type == "3") { $wpgmza_map_type = "HYBRID"; }
+    else if ($wpgmza_map_type == "4") { $wpgmza_map_type = "TERRAIN"; }
+    else { $wpgmza_map_type = "ROADMAP"; }
+    
+
+    $start_zoom = $res->map_start_zoom;
+    if ($start_zoom < 1 || !$start_zoom) { $start_zoom = 5; }
+    if (!$wpgmza_lat || !$wpgmza_lng) { $wpgmza_lat = "51.5081290"; $wpgmza_lng = "-0.1280050"; }
+    
+    
+    if (isset($wpgmza_settings['wpgmza_settings_marker_pull'])) { $marker_pull = $wpgmza_settings['wpgmza_settings_marker_pull']; } else { $marker_pull = "1"; }
+    $restrict_search = false;
+    if (isset($map_other_settings['wpgmza_store_locator_restrict'])) { $restrict_search = $map_other_settings['wpgmza_store_locator_restrict']; } else { $restrict_search = false; }
+    */  
+       
+    $polygonoptions = array();
+    $total_poly_array = wpgmza_b_return_polygon_id_array($wpgmza_current_map_id);
+
+    if ($total_poly_array > 0) {
+        foreach ($total_poly_array as $poly_id) {
+            $polygonoptions[$poly_id] = wpgmza_b_return_poly_options($poly_id);
+
+            $tmp_poly_array = wpgmza_b_return_polygon_array($poly_id);
+            $poly_data_raw_array = array();
+            foreach ($tmp_poly_array as $single_poly) {
+                $poly_data_raw = str_replace(" ","",$single_poly);
+                $poly_data_raw = explode(",",$poly_data_raw);
+                $lat = $poly_data_raw[0];
+                $lng = $poly_data_raw[1];
+                $poly_data_raw_array[] = $poly_data_raw;
+            }
+            $polygonoptions[$poly_id]->polydata = $poly_data_raw_array;
+
+            $linecolor = $polygonoptions[$poly_id]->linecolor;
+            $fillcolor = $polygonoptions[$poly_id]->fillcolor;
+            $fillopacity = $polygonoptions[$poly_id]->opacity;
+            if (!$linecolor) { $polygonoptions[$poly_id]->linecolor = "000000"; }
+            if (!$fillcolor) { $polygonoptions[$poly_id]->fillcolor = "66FF00"; }
+            if (!$fillopacity) { $polygonoptions[$poly_id]->opacity = "0.5"; }
+        }
+    }  else { $polygonoptions = array(); } 
+
+
+    $polylineoptions = array();
+
+    $total_poly_array = wpgmza_b_return_polyline_id_array($wpgmza_current_map_id);
+    if ($total_poly_array > 0) {
+        foreach ($total_poly_array as $poly_id) {
+            $polylineoptions[$poly_id] = wpgmza_b_return_polyline_options($poly_id);
+
+            $tmp_poly_array = wpgmza_b_return_polyline_array($poly_id);
+            $poly_data_raw_array = array();
+            foreach ($tmp_poly_array as $single_poly) {
+                $poly_data_raw = str_replace(" ","",$single_poly);
+                $poly_data_raw = str_replace(")","",$poly_data_raw );
+                $poly_data_raw = str_replace("(","",$poly_data_raw );
+                $poly_data_raw = explode(",",$poly_data_raw);
+                $lat = $poly_data_raw[0];
+                $lng = $poly_data_raw[1];
+                $poly_data_raw_array[] = $poly_data_raw;
+            }
+            $polylineoptions[$poly_id]->polydata = $poly_data_raw_array;
+
+
+            if (isset($polylineoptions[$poly_id]->linecolor)) { $linecolor = $polylineoptions[$poly_id]->linecolor; } else { $linecolor = false; }
+            if (isset($polylineoptions[$poly_id]->fillcolor)) { $fillcolor = $polylineoptions[$poly_id]->fillcolor; } else { $fillcolor = false; }
+            if (isset($polylineoptions[$poly_id]->opacity)) { $fillopacity = $polylineoptions[$poly_id]->opacity; } else { $fillopacity = false; }
+            if (!$linecolor) { $polylineoptions[$poly_id]->linecolor = "000000"; }
+            if (!$fillcolor) { $polylineoptions[$poly_id]->fillcolor = "66FF00"; }
+            if (!$fillopacity) { $polylineoptions[$poly_id]->opacity = "0.5"; }
+        }
+    } else { $polylineoptions = array(); } 
+
+    if (isset($wpgmza_settings['wpgmza_settings_marker_pull']) && $wpgmza_settings['wpgmza_settings_marker_pull'] == "0") {
+        $markers = wpgmaps_return_markers($wpgmza_current_map_id);
+    }
+    
+    wp_enqueue_script( 'wpgmza_api_call' );
+    wp_enqueue_script( 'wpgmaps_core' );
+
+    do_action("wpgooglemaps_basic_hook_user_js_after_core");
+
+    wp_localize_script( 'wpgmaps_core', 'wpgmaps_localize', $res);
+    wp_localize_script( 'wpgmaps_core', 'wpgmaps_localize_polygon_settings', $polygonoptions);
+    wp_localize_script( 'wpgmaps_core', 'wpgmaps_localize_polyline_settings', $polylineoptions);
+
+    wp_localize_script( 'wpgmaps_core', 'wpgmaps_markerurl', wpgmaps_get_marker_url($wpgmza_current_map_id));
+
+
+    if ($wpgmza_settings['wpgmza_settings_marker_pull'] == "0") {
+        wp_localize_script( 'wpgmaps_core', 'wpgmaps_localize_marker_data', $markers);
+    }
+    
+    $wpgmza_settings = apply_filters("wpgmza_basic_filter_localize_settings",$wpgmza_settings);
+
+    wp_localize_script( 'wpgmaps_core', 'wpgmaps_localize_global_settings', $wpgmza_settings);
+
+    wp_localize_script( 'wpgmaps_core', 'wpgmaps_lang_km_away', __("km away","wp-google-maps"));
+    wp_localize_script( 'wpgmaps_core', 'wpgmaps_lang_m_away', __("miles away","wp-google-maps"));
+
 }
 
 
@@ -2370,8 +2360,6 @@ function wpgmaps_tag_basic( $atts ) {
         return;
     }
 
-    $short_code_active = true;
-
     if (!function_exists('wpgmaps_admin_styles_pro')) {
         
         wp_register_style( 'wpgmaps-style', plugins_url('css/wpgmza_style.css', __FILE__),array(),$wpgmza_version);
@@ -2382,11 +2370,8 @@ function wpgmaps_tag_basic( $atts ) {
         $wpgmza_override['zoom'] = $zoom_override;
     }    
    
-    
-
     $map_align = $res->alignment;
-    
-    
+
     $wpgmza_settings = get_option("WPGMZA_OTHER_SETTINGS");
     if (isset($wpgmza_settings['wpgmza_settings_marker_pull']) && $wpgmza_settings['wpgmza_settings_marker_pull'] == '0') {
     } else {
@@ -2394,9 +2379,6 @@ function wpgmaps_tag_basic( $atts ) {
         wpgmza_check_if_marker_file_exists($wpgmza_current_map_id);
     }
     
-
-    
-
     $map_width_type = stripslashes($res->map_width_type);
     $map_height_type = stripslashes($res->map_height_type);
     if (!isset($map_width_type)) { $map_width_type == "px"; }
@@ -2439,6 +2421,197 @@ function wpgmaps_tag_basic( $atts ) {
             ."</style>
             ".$ret_msg;
     }
+
+    $wpgmza_locale = get_locale();
+
+    $wpgmza_suffix = ".com";
+    /* Hebrew correction */
+    if ($wpgmza_locale == "he_IL") { $wpgmza_locale = "iw"; }
+
+    /* Chinese integration */
+    if ($wpgmza_locale == "zh_CN") { $wpgmza_suffix = ".cn"; } else { $wpgmza_suffix = ".com"; } 
+
+    $wpgmza_settings = get_option("WPGMZA_OTHER_SETTINGS");
+
+    /**
+     * Only register the below scrips so that they are available on demand. 
+     */
+    if(isset($wpgmza_settings['wpgmza_settings_remove_api']) && $wpgmza_settings['wpgmza_settings_remove_api'] == "yes"){
+
+        $wpgaps_core_dependancy = array();
+
+    } else { 
+
+        if (isset($wpgmza_settings['wpgmza_api_version']) && $wpgmza_settings['wpgmza_api_version'] != "") {
+            $api_version_string = "v=".$wpgmza_settings['wpgmza_api_version']."&";
+        } else {
+            $api_version_string = "v=3.exp&";
+        }
+
+        $wpgmza_api_key = get_option( 'wpgmza_google_maps_api_key' );
+
+        if( $wpgmza_api_key ){
+            wp_enqueue_script('wpgmza_api_call', '//maps.google'.$wpgmza_suffix.'/maps/api/js?'.$api_version_string.'key='.$wpgmza_api_key.'&language='.$wpgmza_locale, array(), null );            
+        } else {
+            wp_enqueue_script('wpgmza_api_call', '//maps.google'.$wpgmza_suffix.'/maps/api/js?'.$api_version_string.'language='.$wpgmza_locale, array(), null );            
+        }
+
+        $wpgaps_core_dependancy = array( 'wpgmza_api_call' );
+
+    } 
+    
+    wp_enqueue_script('wpgmaps_core', plugins_url('/js/wpgmaps.min.js',__FILE__), $wpgaps_core_dependancy, $wpgmza_version.'b' , false);
+
+    $res = array();
+    $res[0] = wpgmza_get_map_data($wpgmza_current_map_id);
+    $wpgmza_settings = get_option("WPGMZA_OTHER_SETTINGS");
+    
+    if (isset($wpgmza_settings['wpgmza_api_version'])) { 
+        $api_version = $wpgmza_settings['wpgmza_api_version'];
+        if (isset($api_version) && $api_version != "") {
+            $api_version_string = "v=$api_version&";
+        } else {
+            $api_version_string = "v=3.exp&";
+        }
+    } else {
+        $api_version_string = "v=3.exp&";
+    }
+    
+    $map_other_settings = maybe_unserialize($res[0]->other_settings);
+    $res[0]->other_settings = $map_other_settings;
+    $res[0]->map_width_type = stripslashes($res[0]->map_width_type);
+
+
+    if ( isset( $res[0]->other_settings['wpgmza_theme_data'] ) && $res[0]->other_settings['wpgmza_theme_data'] != '') {
+        $res[0]->other_settings['wpgmza_theme_data'] = html_entity_decode(stripslashes($res[0]->other_settings['wpgmza_theme_data']));
+    }   
+    /*
+     * deprecated in 6.2.0
+     
+    if (isset($map_other_settings['weather_layer'])) { $weather_layer = $map_other_settings['weather_layer']; }  else { $weather_layer = false; }
+    if (isset($map_other_settings['weather_layer_temp_type'])) { $weather_layer_temp_type = $map_other_settings['weather_layer_temp_type']; } else { $weather_layer_temp_type = false; }
+    if (isset($map_other_settings['cloud_layer'])) { $cloud_layer = $map_other_settings['cloud_layer']; } else { $cloud_layer = false; }
+    */
+   
+
+   /*
+    if (isset($map_other_settings['transport_layer'])) { $transport_layer = $map_other_settings['transport_layer']; } else { $transport_layer = false; }
+    if (isset($map_other_settings['store_locator_bounce'])) { $store_locator_bounce = $map_other_settings['store_locator_bounce']; } else { $store_locator_bounce = 1; }
+    
+    $wpgmza_lat = $res->map_start_lat;
+    $wpgmza_lng = $res->map_start_lng;
+    $wpgmza_width = $res->map_width;
+    $wpgmza_height = $res->map_height;
+    $wpgmza_width_type = $res->map_width_type;
+    $wpgmza_height_type = $res->map_height_type;
+    $wpgmza_map_type = $res->type;
+    $wpgmza_traffic = $res->traffic;
+    $wpgmza_bicycle = $res->bicycle;
+
+    if (isset($map_other_settings['map_max_zoom'])) { $wpgmza_max_zoom = intval($map_other_settings['map_max_zoom']); } else { $wpgmza_max_zoom = 2; }
+    if (isset($map_other_settings['wpgmza_theme_data'])) { $wpgmza_theme_data = $map_other_settings['wpgmza_theme_data']; } else { $wpgmza_theme_data = false; }
+
+    
+    if (isset($wpgmza_settings['wpgmza_settings_map_open_marker_by'])) { $wpgmza_open_infowindow_by = $wpgmza_settings['wpgmza_settings_map_open_marker_by']; } else { $wpgmza_open_infowindow_by = '1'; }
+    if ($wpgmza_open_infowindow_by == null || !isset($wpgmza_open_infowindow_by)) { $wpgmza_open_infowindow_by = '1'; }
+
+    if (!$wpgmza_map_type || $wpgmza_map_type == "" || $wpgmza_map_type == "1") { $wpgmza_map_type = "ROADMAP"; }
+    else if ($wpgmza_map_type == "2") { $wpgmza_map_type = "SATELLITE"; }
+    else if ($wpgmza_map_type == "3") { $wpgmza_map_type = "HYBRID"; }
+    else if ($wpgmza_map_type == "4") { $wpgmza_map_type = "TERRAIN"; }
+    else { $wpgmza_map_type = "ROADMAP"; }
+    
+
+    $start_zoom = $res->map_start_zoom;
+    if ($start_zoom < 1 || !$start_zoom) { $start_zoom = 5; }
+    if (!$wpgmza_lat || !$wpgmza_lng) { $wpgmza_lat = "51.5081290"; $wpgmza_lng = "-0.1280050"; }
+    
+    
+    if (isset($wpgmza_settings['wpgmza_settings_marker_pull'])) { $marker_pull = $wpgmza_settings['wpgmza_settings_marker_pull']; } else { $marker_pull = "1"; }
+    $restrict_search = false;
+    if (isset($map_other_settings['wpgmza_store_locator_restrict'])) { $restrict_search = $map_other_settings['wpgmza_store_locator_restrict']; } else { $restrict_search = false; }
+    */  
+       
+    $polygonoptions = array();
+    $total_poly_array = wpgmza_b_return_polygon_id_array($wpgmza_current_map_id);
+    if ($total_poly_array > 0) {
+        foreach ($total_poly_array as $poly_id) {
+            $polygonoptions[$poly_id] = wpgmza_b_return_poly_options($poly_id);
+
+            $tmp_poly_array = wpgmza_b_return_polygon_array($poly_id);
+            $poly_data_raw_array = array();
+            foreach ($tmp_poly_array as $single_poly) {
+                $poly_data_raw = str_replace(" ","",$single_poly);
+                $poly_data_raw = explode(",",$poly_data_raw);
+                $lat = $poly_data_raw[0];
+                $lng = $poly_data_raw[1];
+                $poly_data_raw_array[] = $poly_data_raw;
+            }
+            $polygonoptions[$poly_id]->polydata = $poly_data_raw_array;
+
+            $linecolor = $polygonoptions[$poly_id]->linecolor;
+            $fillcolor = $polygonoptions[$poly_id]->fillcolor;
+            $fillopacity = $polygonoptions[$poly_id]->opacity;
+            if (!$linecolor) { $polygonoptions[$poly_id]->linecolor = "000000"; }
+            if (!$fillcolor) { $polygonoptions[$poly_id]->fillcolor = "66FF00"; }
+            if (!$fillopacity) { $polygonoptions[$poly_id]->opacity = "0.5"; }
+        }
+    }  else { $polygonoptions = array(); } 
+
+
+    $polylineoptions = array();
+
+    $total_poly_array = wpgmza_b_return_polyline_id_array($wpgmza_current_map_id);
+    if ($total_poly_array > 0) {
+        foreach ($total_poly_array as $poly_id) {
+            $polylineoptions[$poly_id] = wpgmza_b_return_polyline_options($poly_id);
+
+            $tmp_poly_array = wpgmza_b_return_polyline_array($poly_id);
+            $poly_data_raw_array = array();
+            foreach ($tmp_poly_array as $single_poly) {
+                $poly_data_raw = str_replace(" ","",$single_poly);
+                $poly_data_raw = str_replace(")","",$poly_data_raw );
+                $poly_data_raw = str_replace("(","",$poly_data_raw );
+                $poly_data_raw = explode(",",$poly_data_raw);
+                $lat = $poly_data_raw[0];
+                $lng = $poly_data_raw[1];
+                $poly_data_raw_array[] = $poly_data_raw;
+            }
+            $polylineoptions[$poly_id]->polydata = $poly_data_raw_array;
+
+
+            if (isset($polylineoptions[$poly_id]->linecolor)) { $linecolor = $polylineoptions[$poly_id]->linecolor; } else { $linecolor = false; }
+            if (isset($polylineoptions[$poly_id]->fillcolor)) { $fillcolor = $polylineoptions[$poly_id]->fillcolor; } else { $fillcolor = false; }
+            if (isset($polylineoptions[$poly_id]->opacity)) { $fillopacity = $polylineoptions[$poly_id]->opacity; } else { $fillopacity = false; }
+            if (!$linecolor) { $polylineoptions[$poly_id]->linecolor = "000000"; }
+            if (!$fillcolor) { $polylineoptions[$poly_id]->fillcolor = "66FF00"; }
+            if (!$fillopacity) { $polylineoptions[$poly_id]->opacity = "0.5"; }
+        }
+    } else { $polylineoptions = array(); } 
+
+    if (isset($wpgmza_settings['wpgmza_settings_marker_pull']) && $wpgmza_settings['wpgmza_settings_marker_pull'] == "0") {
+        $markers = wpgmaps_return_markers($wpgmza_current_map_id);
+    }
+    
+    do_action("wpgooglemaps_basic_hook_user_js_after_core");
+
+    wp_localize_script( 'wpgmaps_core', 'wpgmaps_localize', $res);
+    wp_localize_script( 'wpgmaps_core', 'wpgmaps_localize_polygon_settings', $polygonoptions);
+    wp_localize_script( 'wpgmaps_core', 'wpgmaps_localize_polyline_settings', $polylineoptions);
+
+    wp_localize_script( 'wpgmaps_core', 'wpgmaps_markerurl', wpgmaps_get_marker_url($wpgmza_current_map_id));
+
+
+    if ($wpgmza_settings['wpgmza_settings_marker_pull'] == "0") {
+        wp_localize_script( 'wpgmaps_core', 'wpgmaps_localize_marker_data', $markers);
+    }
+    
+    $wpgmza_settings = apply_filters("wpgmza_basic_filter_localize_settings",$wpgmza_settings);
+
+    wp_localize_script( 'wpgmaps_core', 'wpgmaps_localize_global_settings', $wpgmza_settings);
+
+    wp_localize_script( 'wpgmaps_core', 'wpgmaps_lang_km_away', __("km away","wp-google-maps"));
+    wp_localize_script( 'wpgmaps_core', 'wpgmaps_lang_m_away', __("miles away","wp-google-maps"));
     
     return $ret_msg;
 }
@@ -5445,7 +5618,7 @@ if (function_exists('wpgmza_register_pro_version')) {
     add_action('wp_ajax_delete_polyline', 'wpgmaps_action_callback_basic');
     
     add_action('template_redirect','wpgmaps_check_shortcode');
-    add_action('wp_footer', 'wpgmaps_user_javascript_basic');
+    // add_action('wp_footer', 'wpgmaps_user_javascript_basic');
     add_shortcode( 'wpgmza', 'wpgmaps_tag_basic' );
 }
 
@@ -6164,48 +6337,4 @@ function wpgmza_deregister_styles() {
             }
         }
     }
-}
-
-if( !function_exists( 'wpgmaps_pro_activate' ) ){
-    add_action( 'wp_enqueue_scripts', 'wpgmza_load_google_maps_api' );
-}
-
-function wpgmza_load_google_maps_api(){    
-
-    global $short_code_active;
-
-    if( $short_code_active ){
-
-        $wpgmza_settings = get_option("WPGMZA_OTHER_SETTINGS");
-
-        if(isset($wpgmza_settings['wpgmza_settings_remove_api']) && $wpgmza_settings['wpgmza_settings_remove_api'] == "yes"){ } else { 
-
-            $wpgmza_locale = get_locale();
-
-            $wpgmza_suffix = ".com";
-            /* Hebrew correction */
-            if ($wpgmza_locale == "he_IL") { $wpgmza_locale = "iw"; }
-
-            /* Chinese integration */
-            if ($wpgmza_locale == "zh_CN") { $wpgmza_suffix = ".cn"; } else { $wpgmza_suffix = ".com"; } 
-
-            $wpgmza_settings = get_option("WPGMZA_OTHER_SETTINGS");
-            if (isset($wpgmza_settings['wpgmza_api_version']) && $wpgmza_settings['wpgmza_api_version'] != "") {
-                $api_version_string = "v=".$wpgmza_settings['wpgmza_api_version']."&";
-            } else {
-                $api_version_string = "v=3.exp&";
-            }
-
-            $wpgmza_api_key = get_option( 'wpgmza_google_maps_api_key' );
-
-            if( $wpgmza_api_key ){
-                wp_enqueue_script('wpgmza_api_call', 'http://maps.google'.$wpgmza_suffix.'/maps/api/js?'.$api_version_string.'key='.$wpgmza_api_key.'&language='.$wpgmza_locale, array(), null );            
-            } else {
-                wp_enqueue_script('wpgmza_api_call', '//maps.google'.$wpgmza_suffix.'/maps/api/js?'.$api_version_string.'language='.$wpgmza_locale, array(), null );            
-            }
-
-        }
-
-    }
-
 }
