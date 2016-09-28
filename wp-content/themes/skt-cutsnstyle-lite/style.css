@@ -261,3 +261,8 @@ body.wp-custom-logo .logo h1{display:none;}
 #recentcomments li a{padding-left:0px !important;}
 .header_right table{width:100%; text-align:center;}
 body.wp-custom-logo .logo h1{display:none;}
+
+/* Customize theme style */
+.pagewrap1 {
+	visibility: visible;
+}
