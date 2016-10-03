@@ -266,3 +266,9 @@ body.wp-custom-logo .logo h1{display:none;}
 .pagewrap1 {
 	visibility: visible;
 }
+
+strong {
+    color: #343434;
+    font-weight: 600;
+    font-family: 'Roboto', sans-serif;
+}
