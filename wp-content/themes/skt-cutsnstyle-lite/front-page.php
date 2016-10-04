@@ -68,10 +68,15 @@ get_header(); ?>
                         </div>
                        </a>
                      </div>
-			<?php }} ?>                     
-             
+			<?php }} ?>
+
               <div class="clear"></div>
             </div><!-- container -->
  </section>
+    <section id="wrapthird" class="pagewrap3">
+        <div class="container">
+            <?php echo do_shortcode('[WPCR_INSERT]'); ?>
+        </div>
+    </section>
 <?php } ?>
 <?php get_footer(); ?>
