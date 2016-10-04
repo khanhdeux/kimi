@@ -198,7 +198,7 @@ h3.widget-title{ background-color:#f00a77; padding:12px 15px; margin-bottom:1px;
 .phoneno, .emailicon, .mapicon{ margin-bottom:10px; display:block;}
 .mapicon{ background:url(images/icon-map.png) no-repeat left top; padding:0 0 0 25px;}
 .phoneno{ background:url(images/icon-phone.png) no-repeat left center; padding:0 0 0 25px;}
-.emailicon{ background:url(images/icon-email.png) no-repeat left center; padding:0 0 0 30px;}
+.emailicon{ background:url(images/icon-email.png) no-repeat left center; padding:0 0 0 26px;}
 
 
 /* Buttons */

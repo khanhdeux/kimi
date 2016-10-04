@@ -13,7 +13,7 @@ section#home_slider{ margin-top:0;}
 
 .headerright{ text-align:center;}
 .headerright .phoneno{ width:160px; margin:auto;}
-.headerright .emailicon{  width:210px; margin:10px auto;}
+.headerright .emailicon{  width:158px; margin:10px auto; padding-right: 20px}
 
 
 .headerright .column-1, .headerright .column-2, .headerright .column-3{ width:70% !important; margin:0 auto 10px auto;}
