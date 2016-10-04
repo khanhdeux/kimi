@@ -50,26 +50,77 @@
                       
                <div class="cols-3 widget-column-3">
                
-                <h5><?php echo get_theme_mod('contact_title',__('Contact Info','skt-cutsnstyle-lite')); ?></h5> 
+                <h5><?php echo get_theme_mod('contact_title',__('Contact Info','skt-cutsnstyle-lite')); ?></h5>
+
+                   <?php if( get_theme_mod('contact_no', '(0712) 456 9190') ) { ?>
+                       <span class="phoneno"><?php echo get_theme_mod('contact_no', '(0712) 456 9190'); ?></span>
+                   <?php } ?>
+
+                   <?php if( get_theme_mod('contact_mail', 'contact@company.com') ) { ?>
+                       <a href="mailto:<?php echo get_theme_mod('contact_mail','contact@company.com'); ?>"><span class="emailicon"><?php echo get_theme_mod('contact_mail', 'contact@company.com'); ?></span></a>
+                   <?php } ?>
+
                   <?php if( get_theme_mod('contact_add', '100 King St, Melbourne PIC 4000, Australia') ) { ?>
                     <span class="mapicon">
                         <?php echo get_theme_mod('contact_add', '100 King St, Melbourne PIC 4000, <br> Australia'); ?>
                         <?php if( get_theme_mod('contact_co', 'c/o RALPH SALGER FRISEURE') ) { ?>
                             <br /><?php echo get_theme_mod('contact_co', 'c/o RALPH SALGER FRISEURE'); ?>
                         <?php } ?>
+
+                        <div id="map"></div>
+                        <script async defer
+                                src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCq3lS6Nv-w5gZFelftcS8GXQnlDfrKxoA&callback=initMap">
+                        </script>
+                        <script>
+                            // INIT Maps for footer contact page
+                            function initMap() {
+                                var uluru = {lat: 48.144943, lng: 11.559463};
+                                var map = new google.maps.Map(document.getElementById('map'), {
+                                    zoom: 18,
+                                    center: uluru
+                                });
+                                var address = '<?php echo get_theme_mod('contact_add', '100 King St, Melbourne PIC 4000, <br> Australia'); echo ' <br />'; ?> <?php echo get_theme_mod('contact_co', 'c/o RALPH SALGER FRISEURE'); ?>';
+
+                                var contentString = '<div id="content">'+
+                                    '<div id="siteNotice">'+
+                                    '</div>'+
+                                    '<h6 id="firstHeading" class="firstHeading">' + address + '</h6>'+
+                                    '</div>';
+
+                                var infowindow = new google.maps.InfoWindow({
+                                    content: contentString
+                                });
+
+                                var marker = new google.maps.Marker({
+                                    position: uluru,
+                                    map: map,
+                                    title: contentString
+                                });
+
+                                google.maps.event.addListener(marker, 'click', function() {
+                                    infowindow.open(map,marker);
+                                });
+
+                                infowindow.open(map,marker);
+                            }
+
+                            jQuery(document).ready(function(){
+                                google.maps.event.addDomListener(window, 'load', initMap()); // two calls
+                            });
+
+                        </script>
+
+                        <style>
+                            #map {
+                                width: 100%;
+                                height: 400px;
+                                background-color: grey;
+                            }
+                        </style>
+
                     </span>
                   <?php } ?>
-				  
-				  <?php if( get_theme_mod('contact_no', '(0712) 456 9190') ) { ?>
-                    <span class="phoneno"><?php echo get_theme_mod('contact_no', '(0712) 456 9190'); ?></span>
-                  <?php } ?>
-                  
-                  <?php if( get_theme_mod('contact_mail', 'contact@company.com') ) { ?>
-                    <a href="mailto:<?php echo get_theme_mod('contact_mail','contact@company.com'); ?>"><span class="emailicon"><?php echo get_theme_mod('contact_mail', 'contact@company.com'); ?></span></a>
-                  <?php } ?>
-                  
-                  
-                    
+
                 </div><!--end .col-3-->
                 
             <div class="clear"></div>
