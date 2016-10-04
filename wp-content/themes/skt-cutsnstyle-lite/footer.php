@@ -52,7 +52,12 @@
                
                 <h5><?php echo get_theme_mod('contact_title',__('Contact Info','skt-cutsnstyle-lite')); ?></h5> 
                   <?php if( get_theme_mod('contact_add', '100 King St, Melbourne PIC 4000, Australia') ) { ?>
-                    <span class="mapicon"><?php echo get_theme_mod('contact_add', '100 King St, Melbourne PIC 4000, <br> Australia'); ?></span>
+                    <span class="mapicon">
+                        <?php echo get_theme_mod('contact_add', '100 King St, Melbourne PIC 4000, <br> Australia'); ?>
+                        <?php if( get_theme_mod('contact_co', 'c/o RALPH SALGER FRISEURE') ) { ?>
+                            <br /><?php echo get_theme_mod('contact_co', 'c/o RALPH SALGER FRISEURE'); ?>
+                        <?php } ?>
+                    </span>
                   <?php } ?>
 				  
 				  <?php if( get_theme_mod('contact_no', '(0712) 456 9190') ) { ?>

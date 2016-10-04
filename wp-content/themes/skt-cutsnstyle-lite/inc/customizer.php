@@ -297,6 +297,20 @@ function skt_cutsnstyle_lite_customize_register( $wp_customize ) {
 			)
 		)
 	);
+
+	$wp_customize->add_setting('contact_co',array(
+		'default'	=> __('c/o RALPH SALGER FRISEURE','skt-cutsnstyle-lite'),
+		'sanitize_callback'	=> 'wp_htmledit_pre'
+	));
+
+	$wp_customize->add_control(	new WP_Customize_Textarea_Control( $wp_customize, 'contact_co', array(
+				'label'	=> __('Add co address here','skt-cutsnstyle-lite'),
+				'section'	=> 'footer_area',
+				'setting'	=> 'contact_co'
+			)
+		)
+	);
+
 	$wp_customize->add_setting('contact_no',array(
 			'default'	=> __('+123 456 7890','skt-cutsnstyle-lite'),
 			'sanitize_callback'	=> 'sanitize_text_field'
