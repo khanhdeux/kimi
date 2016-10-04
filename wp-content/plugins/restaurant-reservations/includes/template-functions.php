@@ -80,7 +80,7 @@ function rtb_print_booking_form( $args = array() ) {
 
 	?>
 
-<div class="rtb-booking-form">
+<div class="rtb-booking-form wpcf7">
 	<?php if ( $rtb_controller->request->request_inserted === true ) : ?>
 	<div class="rtb-message">
 		<p><?php echo $rtb_controller->settings->get_setting( 'success-message' ); ?></p>
