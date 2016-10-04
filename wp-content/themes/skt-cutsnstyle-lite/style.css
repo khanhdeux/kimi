@@ -284,6 +284,7 @@ strong {
     width: 30.5%;
 }
 
+.listpages h2 {font-size: 2em}
 /* Customize WP Reviews Plugins **/
 .wpcr3_button_1 {background: none; background-color:#f00a77; width:auto; border:none; cursor:pointer; text-transform:uppercase; font:18px 'Roboto',san-serif; color:#ffffff; padding:10px 40px; border-radius:3px;}
 .wpcr3_button_1:hover {background: none; background-color: #f00a77 !important; color: white}
