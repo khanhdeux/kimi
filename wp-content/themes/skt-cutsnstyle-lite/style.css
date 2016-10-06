@@ -98,9 +98,9 @@ h2.section-title {color:#454545; font:300 36px/40px 'Roboto',san-serif; text-ali
 /* = Wrap first css
 -------------------------------------------------------------- */
 .pagewrap1, .pagewrap2, .postwrap3{ visibility:hidden; padding:70px 0;}
-#wrapfirst h1{ font-size:64px; border-right:1px solid #eceaeb; padding:0 30px 0 0; margin:0 30px 0 0;  color:#272727; font-weight:600; line-height:80px; float:left;}
+#wrapfirst h1{ font-size:58px; border-right:1px solid #eceaeb; padding:0 30px 0 0; margin:0 30px 0 0;  color:#272727; font-weight:600; line-height:80px; float:left;}
 #wrapfirst img{ float:right; margin:0 0 0 20px; }
-#wrapfirst p{margin:0 0 20px 0; }
+#wrapfirst p{margin:0 0 20px 0; font-size: 16px }
 .social-links a:hover{ background-color:#dd5145; color:#ffffff; border:1px solid #dd5145;}
 .social-links br{ display:none;}
 #wrapsecond{ background-color:#fbfafa;}
@@ -285,8 +285,14 @@ strong {
 }
 
 .listpages h2 {font-size: 2em}
+
 /* Customize WP Reviews Plugins **/
-.wpcr3_button_1 {background: none; background-color:#f00a77; width:auto; border:none; cursor:pointer; text-transform:uppercase; font:18px 'Roboto',san-serif; color:#ffffff; padding:10px 40px; border-radius:3px;}
+.wpcr3_button_1 {background: none; background-color:#f00a77; width:100%; border:none; cursor:pointer; text-transform:uppercase; font:18px 'Roboto',san-serif; color:#ffffff; padding:10px 40px; border-radius:3px;}
 .wpcr3_button_1:hover {background: none; background-color: #f00a77 !important; color: white}
 .wpcr3_in_content input:not(.wpcr3_fconfirm2) { width:40%; border:1px solid #cccccc; box-shadow:inset 1px 1px 2px #ccc; height:35px; padding:0 15px; color:#797979; margin-bottom:0;}
 .wpcr3_in_content textarea {width:60%; border:1px solid #cccccc; box-shadow:inset 1px 1px 2px #ccc; height:150px; color:#797979; margin-bottom:25px; font:12px arial; padding:10px; padding-right:0;}
+
+/* Customize Booking form */
+.rtb-booking-form {
+    margin-bottom: 15px !important;
+}
